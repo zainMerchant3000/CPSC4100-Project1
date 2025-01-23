@@ -12,7 +12,7 @@ public class CliqueDetector {
         //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
         // to see how IntelliJ IDEA suggests fixing it.
         if (args.length == 0) {
-            System.err.println("Please provide the input filename as the first argument.");
+            System.err.println("Please provide the input filename as the first argument.");//
             System.exit(1);
         }
         try {
