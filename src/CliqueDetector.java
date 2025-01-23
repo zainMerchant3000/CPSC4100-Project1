@@ -118,7 +118,7 @@ public class CliqueDetector {
                     if (adjMatrix[i][j] == 1) {
                         // call uf.union(i,j)
                         uf.union(i, j);
-                    }
+                    }//
                 }
             }
 
