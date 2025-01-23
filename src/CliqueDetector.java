@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+// store N, M
 public class CliqueDetector {
     static int N, M;
 
