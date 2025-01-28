@@ -65,8 +65,7 @@ public class CliqueDetector {
     }
 
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
+
         if (args.length == 0) {
             System.err.println("Please provide the input filename as the first argument.");//
             System.exit(1);
@@ -133,31 +132,44 @@ public class CliqueDetector {
                 //    {} // Node 0 {2} // Node 1 (has neighbor 2) {1} // Node 2 has neighbor 1]
                 adjList.get(x).add(y); //
                 adjList.get(y).add(x); // for symmetry (undirected 1,2 = 2,1)
-
-            }
-
-            //call Union-Find algorithm to find connected components
-            UnionFind uf = new UnionFind(N);
-            for (int i = 0; i < N; i++) {
+                // Print the adjacency list after adding the edge (x, y)
+                System.out.println("Adjacency List after adding edge (" + (x + 1) + ", " + (y + 1) + "):");
                 for (int j = 0; j < N; j++) {
-                    /*
-                    // locate connections
-                    if (adjMatrix[i][j] == 1) {
-                        // call uf.union(i,j)
-                        uf.union(i, j);
-                    }//
-
-                     */
+                    System.out.print((j + 1) + ": " + adjList.get(j) + " ");
                 }
+                System.out.println();  // Print a newline after each printout
+
             }
+          //  System.out.println(" " + adjList.get(0));
+
+
 
             br.close();
+            // get degree (calculated by finding number of connections of each node)
+            degree = new int[N]; // 1) initialize array
+            for (int i = 0; i < N; i++) { // find #of connections of each Node
+                degree[i] = adjList.get(i).size(); // store number of connections in array
+                //System.out.println("for node "+ (i + 1) + " " + degree[i] + " ");
+               // System.out.println("neighbors of node "+ (i + 1) + " " + adjList.get(i) + " ");
+            }
+            // example: adjList.get(0).size() -> getting number of connected components of node 1 (i + 1)
+            // adjList.get(i) -> neighbors in node i
+            //
+
+            //1) call Union-Find algorithm to find connected components
+            UnionFind uf = new UnionFind(N); //
+            for (int i = 0; i < N; i++) { // go through each node in graph
+                for (int neighbor: adjList.get(i)) { // go through all neighbors of node i
+                    uf.union(neighbor, i); //
+
+                }
+            }
 
             int maxScore = 0;
             // your code here
 
             // Output the result
-            System.out.println(maxScore);
+           // System.out.println(maxScore);
         } catch (IOException e) {
             System.err.println("An error occurred while reading the input file:");
             e.printStackTrace();
