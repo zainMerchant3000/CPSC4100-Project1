@@ -9,6 +9,8 @@ public class CliqueDetector {
     static int N, M;
     static int[][] adjMatrix; // create 2D Matrix to store edges
     static int[] degree; //
+    static List<Set<Integer>> adjList; // to store
+    // ex) 1: {
 
     // Static class (Nested class)
     static class UnionFind {
@@ -83,11 +85,37 @@ public class CliqueDetector {
             // token[0] -> N
             // token[1] -> M
             N = Integer.parseInt(tokens[0]);
-            System.out.println("reading N: " + N);
+           // System.out.println("reading N: " + N);
             M = Integer.parseInt(tokens[1]);
-            System.out.println("reading M: " + M);
-            // initialize adjacency Matrix:
-            adjMatrix = new int[N][M];
+          //  System.out.println("reading M: " + M);
+
+            // create adjacency list
+            // 1 2
+            //1 3
+            //1 4
+            //2 3
+            //2 4
+            //3 4
+            //1 5
+            //2 6
+            //3 7
+            //4 8
+            // ex:
+            // {2,3,4,5} Node: 1 -> this is HashSet<>()
+            // {1,3,4,6} Node: 2
+            // {1,2,4,7}
+            //
+            adjList = new ArrayList<>();
+            //iterate over every Node in the graph
+            // creating list of sets (each
+            for (int i = 0; i < N; i++) {
+                adjList.add(new HashSet<>());
+                // HashSet<> : represents
+            }
+
+            // ex: adjList = [ new HashSet<>(), new HashSet<>()]
+            // HashSet<>() -> set for each Node
+
             // Read edges
             for (int i = 0; i < M; i++) {
                 // tokens -> reading each line from file (not including first)
@@ -98,27 +126,28 @@ public class CliqueDetector {
                 int y = Integer.parseInt(tokens[1]) - 1;
                 //System.out.println("y: " + y);
                 // your code here
-                adjMatrix[x][y] = 1;
-                adjMatrix[y][x] = 1; // assuming symmetry (undirected)
-                // trace:
-                // i = 0
-                //  (x,y) -> (1,2)
-                // adjMatrix[1][2] = 1
-                // adjMatrix[2][1] = 1
-                // i = 1
-                // (x,y)
-                System.out.println("x,y: " + adjMatrix[x][y]);
+                // adjList.get(x): retrieves set associated with node x (contains all neighbors of x)
+                // adjList.add(y): adds node y to set of neighbors of node x
+                // ex) for (1,2): adjList.get(1).add(2)
+                // adjList = [
+                //    {} // Node 0 {2} // Node 1 (has neighbor 2) {1} // Node 2 has neighbor 1]
+                adjList.get(x).add(y); //
+                adjList.get(y).add(x); // for symmetry (undirected 1,2 = 2,1)
+
             }
 
             //call Union-Find algorithm to find connected components
             UnionFind uf = new UnionFind(N);
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
+                    /*
                     // locate connections
                     if (adjMatrix[i][j] == 1) {
                         // call uf.union(i,j)
                         uf.union(i, j);
                     }//
+
+                     */
                 }
             }
 
