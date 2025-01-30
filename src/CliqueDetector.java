@@ -24,6 +24,7 @@ public class CliqueDetector {
             size = new int[n];
             for (int i = 0; i < n; i++) {
                 parent[i] = i;
+               // System.out.println("parent[i[" + i + "]] = " + parent[i]);
                 size[i] = 1;
             }
         }
@@ -39,27 +40,45 @@ public class CliqueDetector {
         void union(int p, int q) {
             // locate root of p and q
             int rootP = find(p);
+           // System.out.println("rootP = " + rootP);
+            //System.out.println("p = " + p);
             int rootQ = find(q);
+          //  System.out.println("rootQ = " + rootQ);
+           // System.out.println("q = " + q);
             // p and q contain same root (already merged)
             if (rootP == rootQ) {
+              //  System.out.println("p and q contain same root");
                 return;
             }
             // make smaller root point to larger one
             // if p < q
             if (size[rootP] < size[rootQ]) {
+               // System.out.println("size[rootP] < size[rootQ]");
                 // 1) set q to be parent of p
                 parent[rootP] = rootQ;
+                //System.out.println("parent[rootP] = " + parent[rootP]);
                 // 2) update q size by adding subtree p
                 size[rootQ] += size[rootP];
+                //System.out.println("size[rootQ] = " + size[rootQ]);
             } else {
+               // System.out.println("size[rootQ] >= size[rootP]");
                 // otherwise p >= q
                 // if p == q: rootP is the parent of rootQ (for consistency)
                 // else(size[rootP] >= size[rootQ])
                 // 1) set p to be the parent of q
                 parent[rootQ] = rootP;
+               // System.out.println("parent[rootQ] = " + parent[rootQ]);
                 // 2) Update p size by adding subtree q
                 size[rootP] += size[rootQ];
+                //System.out.println("size[rootP] = " + size[rootP]);
             }
+            // Print the state of the parent and size arrays after each union operation
+
+            System.out.println("After union(" + p + ", " + q + "):");
+            System.out.println("parent: " + Arrays.toString(parent));
+            System.out.println("size: " + Arrays.toString(size));
+            
+
         }
 
     }
@@ -133,24 +152,23 @@ public class CliqueDetector {
                 adjList.get(x).add(y); //
                 adjList.get(y).add(x); // for symmetry (undirected 1,2 = 2,1)
                 // Print the adjacency list after adding the edge (x, y)
-                System.out.println("Adjacency List after adding edge (" + x + ", " + y + "):");
+               /* System.out.println("Adjacency List after adding edge (" + x + ", " + y + "):");
                 for (int j = 1; j <= N; j++) {
                     System.out.print(j + ": " + adjList.get(j) + " ");
                 }
                 System.out.println();  // Print a newline after each printout
-
+            */
             }
 
 
             br.close();
             // get degree (calculated by finding number of connections of each node)
-            degree = new int[N+1]; // 1) initialize array
+            degree = new int[N + 1]; // 1) initialize array
             for (int i = 1; i <= N; i++) { // find #of connections of each Node
                 degree[i] = adjList.get(i).size(); // store number of connections in array
-                //System.out.println("for node "+ (i + 1) + " " + degree[i] + " ");
-                // System.out.println("neighbors of node "+ (i + 1) + " " + adjList.get(i) + " ");
+              //  System.out.print(degree[i] + " ");
             }
-            // example: adjList.get(0).size() -> getting number of connected components of node 1 (i + 1)
+            // example: adjList.get(1).size() -> getting number of connected components of node 1
             // adjList.get(i) -> neighbors in node i
             //
 
@@ -158,49 +176,67 @@ public class CliqueDetector {
             UnionFind uf = new UnionFind(N + 1); //
             for (int i = 1; i <= N; i++) { // go through each node in graph
                 for (int neighbor : adjList.get(i)) { // go through all neighbors of node i
-                    uf.union(neighbor, i); // construct the graph
+                    uf.union(i, neighbor); // go through
+                    //System.out.println("Neighbor " + neighbor + " " + i);
+                    //System.out.println("uf.union(" + neighbor + ", " + i + ")");
                     // neighbor -> connections of Node i
                     // i -> Node
 
                 }
             }
-
             // 2) Find all connected Components
             // Map<Integer, Integer> map = new HashMap<>(); // create Components map
+            // map[i] -> storing root of each node
             var map = new int[N + 1];
-            // key = root of connected component
-            // value = list of nodes in component
             for (int i = 1; i <= N; i++) {
                 int root = uf.find(i); // find root of each Node
-                map[i] = root;
-                System.out.println(i + " " + root);
+                map[i] = root; // store root of each Node in map Array
+                // ex) i = 1, find(1) returns 1 map[1] = 1
+               // System.out.print(map[i] + " ");
+                //System.out.println("Node: " + i + " root of Node " + root);
             }
             // cc stores distinct connected components
+            // root of each node determines connectivity
+            // (can sort the value of the roots to check for disjoint sets)
+
             var cc = new ArrayList<Integer>();
-            Arrays.sort(map); // put all the equal items together
-            cc.add(map[1]);
-            for (int x = map[1], i = 2; i <= N; i++) {
-                if (x != map[i]) {
-                    x = map[i];
-                    cc.add(x);
+            Arrays.sort(map); // put all the equal items together (group all nodes with same root together)
+            cc.add(map[1]); // add first root to connected component
+            for (int x = map[1], i = 2; i <= N; i++) { // x = map[1], the root of the first node
+                if (x != map[i]) { // check for changes in Root values
+                    x = map[i]; // update x
+                    cc.add(x); // add new root to connected component
                 }
             }
+           // System.out.println("cc: " + cc.toString());
             int maxScore = 0;
+            // cc.size() -> gives number of distinct connected components
+            // processing connected component for each root
             for (int i = 0; i < cc.size(); i++) {
-                int c = cc.get(i);
-                var ns = new ArrayList<Integer>();
+                int c = cc.get(i); // retrieve each root from connected component
+                System.out.println("c: " + c);
+                var ns = new ArrayList<Integer>(); // will store nodes belonging to the current connected component
+                // find Nodes in current connected component
+                // n <= N -> iterate through every Node in the graph (1 to N)
                 for (int n = 1; n <= N; n++) {
+                    // map[n] -> contains root of connected component for node n
+                    // c -> root of current connected node
+                    // map[n] == c:
                     if (map[n] == c) ns.add(n);
                 }
+                // connected component only has one node (skip) clique cannot be single node
                 if (ns.size() == 1) {
                     continue;
-                }
+                } // base-case: if there are only two nodes
+                // the score must always be 2 (degree = 1)
                 if (ns.size() == 2) {
                     maxScore = Math.max(maxScore, 2);
                     continue;
                 }
-                //
-
+                System.out.println("ns: " + ns.toString());
+                // implement recursive case for cliques
+                // find cliques within the connected component
+               // List<Set<Integer>> cliques = findCliques(ns, adjList);
 
 
             }
@@ -215,4 +251,13 @@ public class CliqueDetector {
             System.exit(1);
         }
     }
+
+    /*
+    static List<Set<Integer>> findCliques(List<Set<Integer>> adjList, int[] degree) {
+        // Implement a method to find all cliques in the graph
+        // This can be done using a recursive approach or a combinatorial approach
+        return new ArrayList<>(); // Placeholder return
+    }
+
+     */
 }
