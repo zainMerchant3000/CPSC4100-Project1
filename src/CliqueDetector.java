@@ -160,20 +160,18 @@ public class CliqueDetector {
             */
             }
 
-
             br.close();
             // get degree (calculated by finding number of connections of each node)
             degree = new int[N + 1]; // 1) initialize array
             for (int i = 1; i <= N; i++) { // find #of connections of each Node
                 degree[i] = adjList.get(i).size(); // store number of connections in array
-                //  System.out.print(degree[i] + " ");
+                System.out.print("degree[i] " + degree[i] + " ");
             }
             // example: adjList.get(1).size() -> getting number of connected components of node 1
             // adjList.get(i) -> neighbors in node i
-            //
 
-            bestScore();
-
+            int maxScore = bestScore();
+            System.out.println("maxScore: " + maxScore);
             // your code here
 
             // Output the result
@@ -185,7 +183,7 @@ public class CliqueDetector {
         }
     }
 
-    private static void bestScore() {
+    private static int bestScore() {
         //1) call Union-Find algorithm to find connected components
         UnionFind uf = new UnionFind(N + 1); //
         for (int i = 1; i <= N; i++) { // go through each node in graph
@@ -242,7 +240,7 @@ public class CliqueDetector {
             if (ns.size() == 1) {
                 continue;
             } // base-case: if there are only two nodes
-            // the score must always be 2 (degree = 1)
+            // the score must always be 2 (degree = 1, clique size = 2)
             if (ns.size() == 2) {
                 maxScore = Math.max(maxScore, 2);
                 continue;
@@ -250,68 +248,86 @@ public class CliqueDetector {
             System.out.println("ns: " + ns.toString());
             // implement recursive case for cliques
             // find cliques within the connected component
+
+            /// calculating node that has smallest degree in connected component ns
+            int leastDegree = Integer.MAX_VALUE;
             //
-            // List<Set<Integer>> cliques = findCliques(ns, adjList);
-            int leastDegree = 1000;
             var leastDegreeVertices = new ArrayList<Integer>();
-            for (int n: ns) {
+            // iterate through each node in the connected component (ns)
+            for (int n : ns) {
+                // updates leastDegree to be minumum of current leastDegree
+                // degree[n] -> looking at degree of each connected component
+                System.out.println("n: " + n);
                 leastDegree = Math.min(leastDegree, degree[n]);
+                System.out.println("leastDegree: " + leastDegree);
             }
-            for (int n: ns) {
+            /// add nodes that have smallest degree
+            for (int n : ns) {
+                // retrieve nodes with smallest degree
                 if (degree[n] == leastDegree) {
+                    /// store in array
                     leastDegreeVertices.add(n);
                 }
             }
+            /// score_no -> calculating score of entire (connected component)
+            // start by calculating score of entire connected component (clique = entire connected component)
             int score_no = leastDegree * ns.size();
+            System.out.println("score_no: " + score_no);
+            /// score_yes -> store the maximum score by considering cliques that exclude nodes w/
+            /// smallest degree
             int score_yes = 0;
-            for (int n: leastDegreeVertices) {
-                for (int m: adjList.get(n)) {
-                    degree[m]--;
-                    adjList.get(m).remove(n);
+            // go through vertices with leastDegree
+            for (int n : leastDegreeVertices) {
+                // create list of neighbors before modifying adjancency list
+                List<Integer> neighbors = new ArrayList<>(adjList.get(n));
+                System.out.println("n: " + n);
+                // m: neighbors in node n
+                // adjList.get(n): set of neighbors for node n
+                //
+                for (int m : neighbors) {
+                    System.out.println("m: " + m);
+                    System.out.println("adjList.get(n): " + adjList.get(n));
+                    // Update degree and remove connection
+                    degree[m]--; // account for removal of connection between n and m
+                    adjList.get(m).remove(n); //remove actual connection between n and m
                 }
 
                 // TODO: do recursion on best score and assign into score_yes
-                score_yes = Math.max(score_yes, bestScore());
-                for (int m: adjList.get(n)) {
+                // bestScore() -> should return int
+                //
+                 // recalculate ns after modifying the graph
+                 var newNs = recalculateConnectedComponent(c, map);
+
+                if (newNs.size() <= 1) {
+                    score_yes = 0;
+                    System.out.println("inside supposed base case");
+                } else {
+                    score_yes = Math.max(score_yes, bestScore());
+                    System.out.println("score_yes: " + score_yes);
+                }
+                // restore connections after calculation of remaining scores
+                for (int m : neighbors) {
                     degree[m]++;
                     adjList.get(m).add(n);
                 }
             }
-            /*
-            // Calculate scores for each clique
-            for (Set<Integer> clique : cliques) {
-                 int score = calculateCliqueScore(clique, adjList);
-                 maxScore = Math.max(maxScore, score);
-               }
-
-             */
-
-
+            // calculate highest score after recursive removal of nodes
+            System.out.println("maxScore: " + maxScore);
+            maxScore = Math.max(maxScore, score_yes);
         }
+        return maxScore;
     }
 
-    /*
-    static List<Set<Integer>> findCliques(List<Set<Integer>> adjList, int[] degree) {
-        // Implement a method to find all cliques in the graph
-        // This can be done using a recursive approach or a combinatorial approach
-        return new ArrayList<>(); // Placeholder return
-    }
-
-    static int calculateCliqueScore(Set<Integer> clique, List<Set<Integer>> adjList) {
-    int size = clique.size();
-    int minDegree = Integer.MAX_VALUE;
-    for (int node : clique) {
-        int degree = 0;
-        for (int neighbor : adjList.get(node)) {
-            if (clique.contains(neighbor)) {
-                degree++;
+    private static List<Integer> recalculateConnectedComponent(int c, int[] map) {
+        var newNs = new ArrayList<Integer>();
+        for (int j = 1; j <= N; j++) {
+            if (map[j] == c && adjList.get(j).size() > 0) {
+                newNs.add(j);
             }
         }
-        minDegree = Math.min(minDegree, degree);
+        return newNs;
     }
-    return size * minDegree;
+
 }
 
 
-     */
-}
