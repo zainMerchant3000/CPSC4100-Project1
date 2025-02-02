@@ -189,8 +189,8 @@ public class CliqueDetector {
         for (int i = 1; i <= N; i++) { // go through each node in graph
             for (int neighbor : adjList.get(i)) { // go through all neighbors of node i
                 uf.union(i, neighbor); // go through
-                System.out.println("Neighbor " + neighbor + " " + i);
-                System.out.println("uf.union(" + neighbor + ", " + i + ")");
+               // System.out.println("Neighbor " + neighbor + " " + i);
+                System.out.println("uf.union(" + i + ", " + neighbor + ")");
                 // neighbor -> connections of Node i
                 // i -> Node
 
@@ -240,7 +240,7 @@ public class CliqueDetector {
                 // map[n] -> contains root of connected component for node n
                 // c -> root of current connected node
                 // map[n] == c:
-                if (map[n] == c) ns.add(n);
+                if (map[n] == c) ns.add(n); System.out.println("ns: " + ns.toString());
             }
             // connected component only has one node (skip) clique cannot be single node
             if (ns.size() == 1) {
@@ -273,6 +273,7 @@ public class CliqueDetector {
                 if (degree[n] == leastDegree) {
                     /// store in array
                     leastDegreeVertices.add(n);
+                    System.out.println("leastDegreeVertices: " + leastDegreeVertices.toString());
                 }
             }
             /// score_no -> calculating score of entire (connected component)
