@@ -136,6 +136,7 @@ public class CliqueDetector {
 
             // Read edges
             for (int i = 0; i < M; i++) {
+
                 // tokens -> reading each line from file (not including first)
                 tokens = br.readLine().split("\\s+");
                 // retrieve (x,y) each edge in the graph
@@ -152,20 +153,21 @@ public class CliqueDetector {
                 adjList.get(x).add(y); //
                 adjList.get(y).add(x); // for symmetry (undirected 1,2 = 2,1)
                 // Print the adjacency list after adding the edge (x, y)
-               /* System.out.println("Adjacency List after adding edge (" + x + ", " + y + "):");
+                System.out.println("Adjacency List after adding edge (" + x + ", " + y + "):");
                 for (int j = 1; j <= N; j++) {
                     System.out.print(j + ": " + adjList.get(j) + " ");
                 }
                 System.out.println();  // Print a newline after each printout
-            */
+
             }
 
             br.close();
+            System.out.println("just read into adjancency list");
             // get degree (calculated by finding number of connections of each node)
             degree = new int[N + 1]; // 1) initialize array
             for (int i = 1; i <= N; i++) { // find #of connections of each Node
                 degree[i] = adjList.get(i).size(); // store number of connections in array
-                //System.out.print("degree[i] " + degree[i] + " ");
+                System.out.print("degree[i] " + degree[i] + " ");
             }
             // example: adjList.get(1).size() -> getting number of connected components of node 1
             // adjList.get(i) -> neighbors in node i
@@ -186,6 +188,7 @@ public class CliqueDetector {
     private static int bestScore() {
         //1) call Union-Find algorithm to find connected components
         UnionFind uf = new UnionFind(N + 1); //
+        System.out.println("going to do Union find ");
         for (int i = 1; i <= N; i++) { // go through each node in graph
             for (int neighbor : adjList.get(i)) { // go through all neighbors of node i
                 uf.union(i, neighbor); // go through
@@ -197,30 +200,34 @@ public class CliqueDetector {
             }
         }
         // 2) Find all connected Components
-        // Map<Integer, Integer> map = new HashMap<>(); // create Components map
-        // map[i] -> storing root of each node
-        var map = new int[N + 1];
-        for (int i = 1; i <= N; i++) {
-            int root = uf.find(i); // find root of each Node
-            map[i] = root; // store root of each Node in map Array
-            // ex) i = 1, find(1) returns 1 map[1] = 1
-            System.out.print("map[i] " + map[i] + " ");
-            System.out.println("Node: " + i + " root of Node " + root);
-        }
         // cc stores distinct connected components
         // root of each node determines connectivity
         // (can sort the value of the roots to check for disjoint sets)
 
         var cc = new ArrayList<Integer>();
-        Arrays.sort(map); // put all the equal items together (group all nodes with same root together)
-        cc.add(map[1]); // add first root to connected component
-        for (int x = map[1], i = 2; i <= N; i++) { // x = map[1], the root of the first node
-            if (x != map[i]) { // check for changes in Root values
-                x = map[i]; // update x
-                cc.add(x); // add new root to connected component
+        var roots = new int[N + 1];
+        {
+            // map is like 'roots' but it gets sorted.
+            // it's solely used to find 'cc'.
+            var map = new int[N + 1];
+            for (int i = 1; i <= N; i++) {
+                int root = uf.find(i); // find root of each Node
+                map[i] = root; // store root of each Node in map Array
+                roots[i] = root;
+                // ex) i = 1, find(1) returns 1 map[1] = 1
+                System.out.print("map[i] " + map[i] + " ");
+                System.out.println("Node: " + i + " root of Node " + root);
             }
+            Arrays.sort(map); // put all the equal items together (group all nodes with same root together)
+            cc.add(map[1]); // add first root to connected component
+            for (int x = map[1], i = 2; i <= N; i++) { // x = map[1], the root of the first node
+                if (x != map[i]) { // check for changes in Root values
+                    x = map[i]; // update x
+                    cc.add(x); // add new root to connected component
+                }
+            }
+            System.out.println("cc: " + cc.toString());
         }
-        // System.out.println("cc: " + cc.toString());
         int maxScore = 0;
         // cc.size() -> gives number of distinct connected components
         // processing connected component for each root
@@ -232,15 +239,15 @@ public class CliqueDetector {
         /// score_yes -> store the maximum score by considering cliques that exclude nodes w/
         /// smallest degree
         for (int c : cc) {
-            // System.out.println("c: " + c);
+            System.out.println("c: " + c);
             var ns = new ArrayList<Integer>(); // will store nodes belonging to the current connected component
             // find Nodes in current connected component
             // n <= N -> iterate through every Node in the graph (1 to N)
             for (int n = 1; n <= N; n++) {
-                // map[n] -> contains root of connected component for node n
+                // roots[n] -> contains root of connected component for node n
                 // c -> root of current connected node
-                // map[n] == c:
-                if (map[n] == c) ns.add(n); System.out.println("ns: " + ns.toString());
+                // roots[n] == c:
+                if (roots[n] == c) ns.add(n); System.out.println("ns: " + ns.toString());
             }
             // connected component only has one node (skip) clique cannot be single node
             if (ns.size() == 1) {
@@ -276,14 +283,12 @@ public class CliqueDetector {
                     System.out.println("leastDegreeVertices: " + leastDegreeVertices.toString());
                 }
             }
-            /// score_no -> calculating score of entire (connected component)
-            // start by calculating score of entire connected component (clique = entire connected component)
-            int score_no = leastDegree * (ns.size() - 1)+1;
-            System.out.println("score_no: " + score_no);
-            /// score_yes -> store the maximum score by considering cliques that exclude nodes w/
-            /// smallest degree
-            int score_yes = 0;
 
+
+            int score_no = 0;
+            // start by calculating score of entire connected component (clique = entire connected component)
+            int score_yes = leastDegree * ns.size();
+            System.out.println("score_yes: " + score_yes);
             // go through vertices with leastDegree
             for (int n : leastDegreeVertices) {
                 // create list of neighbors before modifying adjancency list
@@ -317,9 +322,9 @@ public class CliqueDetector {
                 var existingSet = adjList.get(n);
                 adjList.set(n, emptySet);
 
-                score_yes = Math.max(score_yes, bestScore());
+                score_no = Math.max(score_no, bestScore());
                 adjList.set(n, existingSet);
-                System.out.println("score_yes: " + score_yes);
+                System.out.println("score_no: " + score_no);
 
 
 
