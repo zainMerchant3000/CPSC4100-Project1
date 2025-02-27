@@ -10,6 +10,7 @@ public class CliqueDetector {
     static int[] degree; //
     static List<Set<Integer>> adjList; // to store
 
+
     // Static class (Nested class)
     static class UnionFind {
         int[] parent; // parent[i] = parent of i
@@ -32,6 +33,11 @@ public class CliqueDetector {
                 i = parent[i];
             }
             return i;
+        }
+
+        // method to check if two elements are in the same set:
+        public boolean connected(int p, int q) {
+            return find(p) == find(q);
         }
 
         void union(int p, int q) {
@@ -167,171 +173,19 @@ public class CliqueDetector {
         }
     }
 
-    private static int bestScore() {
-        //1) call Union-Find algorithm to find connected components
-        UnionFind uf = new UnionFind(N + 1); //
-        // System.out.println("going to do Union find ");
-        for (int i = 1; i <= N; i++) { // go through each node in graph
-            for (int neighbor : adjList.get(i)) { // go through all neighbors of node i
-                uf.union(i, neighbor); // go through
-                // System.out.println("Neighbor " + neighbor + " " + i);
-                // System.out.println("uf.union(" + i + ", " + neighbor + ")");
-                // neighbor -> connections of Node i
-                // i -> Node
+    public static int bestScore() {
+        boolean[] removed = new boolean[N];
+        int[] degreeAtRemoval = new int[N];
+        int[] removal = new int[N];
+        int[] degreeC = new int[N]; // array to store current degree of our Nodes
 
-            }
-        }
-        // 2) Find all connected Components
-        // cc stores distinct connected components
-        // root of each node determines connectivity
-        // (can sort the value of the roots to check for disjoint sets)
+        var pq = new PriorityQueue<>();
+        return 1;
 
-        var cc = new ArrayList<Integer>();
-        var roots = new int[N + 1];
-        {
-            // map is like 'roots' but it gets sorted.
-            // it's solely used to find 'cc'.
-            var map = new int[N + 1];
-            for (int i = 1; i <= N; i++) {
-                int root = uf.find(i); // find root of each Node
-                map[i] = root; // store root of each Node in map Array
-                roots[i] = root;
-                // ex) i = 1, find(1) returns 1 map[1] = 1
-                // System.out.print("map[i] " + map[i] + " ");
-                // System.out.println("Node: " + i + " root of Node " + root);
-            }
-            Arrays.sort(map); // put all the equal items together (group all nodes with same root together)
-            cc.add(map[1]); // add first root to connected component
-            for (int x = map[1], i = 2; i <= N; i++) { // x = map[1], the root of the first node
-                if (x != map[i]) { // check for changes in Root values
-                    x = map[i]; // update x
-                    cc.add(x); // add new root to connected component
-                }
-            }
-            //  System.out.println("cc: " + cc.toString());
-        }
-        int maxScore = 0;
-        // cc.size() -> gives number of distinct connected components
-        // processing connected component for each root
-        // retrieve each root from connected component
-        /// calculating node that has smallest degree in connected component ns
-        /// add nodes that have smallest degree
-        /// store in array
-        /// score_no -> calculating score of entire (connected component)
-        /// score_yes -> store the maximum score by considering cliques that exclude nodes w/
-        /// smallest degree
-        for (int c : cc) {
-            // System.out.println("c: " + c);
-            var ns = new ArrayList<Integer>(); // will store nodes belonging to the current connected component
-            // find Nodes in current connected component
-            // n <= N -> iterate through every Node in the graph (1 to N)
-            for (int n = 1; n <= N; n++) {
-                // roots[n] -> contains root of connected component for node n
-                // c -> root of current connected node
-                // roots[n] == c:
-                if (roots[n] == c) ns.add(n); //System.out.println("ns: " + ns.toString());
-            }
-            // connected component only has one node (skip) clique cannot be single node
-            if (ns.size() == 1) {
-                continue;
-            } // base-case: if there are only two nodes
-            // the score must always be 2 (degree = 1, clique size = 2)
-            if (ns.size() == 2) {
-                maxScore = Math.max(maxScore, 2);
-                continue;
-            }
-            // System.out.println("ns: " + ns.toString());
-            // implement recursive case for cliques
-            // find cliques within the connected component
-
-            /// calculating node that has smallest degree in connected component ns
-            int leastDegree = Integer.MAX_VALUE;
-            //
-            var leastDegreeVertices = new ArrayList<Integer>();
-            // iterate through each node in the connected component (ns)
-            for (int n : ns) {
-                // updates leastDegree to be minumum of current leastDegree
-                // degree[n] -> looking at degree of each connected component
-                // System.out.println("n: " + n);
-                leastDegree = Math.min(leastDegree, degree[n]);
-                // System.out.println("leastDegree: " + leastDegree);
-            }
-            /// add nodes that have smallest degree
-            for (int n : ns) {
-                // retrieve nodes with smallest degree
-                if (degree[n] == leastDegree) {
-                    /// store in array
-                    leastDegreeVertices.add(n);
-                    //  System.out.println("leastDegreeVertices: " + leastDegreeVertices.toString());
-                }
-            }
-
-            int score_no = 0;
-            // start by calculating score of entire connected component (clique = entire connected component)
-            int score_yes = leastDegree * ns.size();
-            //  System.out.println("score_yes: " + score_yes);
-            // go through vertices with leastDegree
-            for (int n : leastDegreeVertices) {
-                // create list of neighbors before modifying adjancency list
-                List<Integer> neighbors = new ArrayList<>(adjList.get(n));
-                // used to track changes to the degrees of the nodes
-                Stack<int[]> degreeChanges = new Stack<>();
-                // used to track changes to adj list
-                Stack<int[]> adjChanges = new Stack<>();
-                //  System.out.println("Vertice with least degree (n): " + n);
-                // m: neighbors in node n
-                // adjList.get(n): set of neighbors for node n
-                //
-                for (int m : neighbors) {
-                    // push current state of degree before modifying degree of node
-                    // m: first element is neighbor node m
-                    // degree[m]: current degree of node m
-                    degreeChanges.push(new int[]{m, degree[m]});
-                    // push current state of degree before modifying connection between n and m
-                    //
-                    adjChanges.push(new int[]{m, n});
-                    //System.out.println("neighbor of least degree vertice (m): " + m);
-                    //System.out.println("adjList.get(n): " + adjList.get(n));
-                    // Update degree and remove connection
-                    degree[m]--; // account for removal of connection between n and m
-                    // System.out.println("degree[m]: " + degree[m]);
-                    adjList.get(m).remove(n); //remove actual connection between n and m
-
-                    // System.out.println("adjList[n] after removal of connection n and m: " + adjList.get(m));
-                }
-                var emptySet = new HashSet<Integer>();
-                var existingSet = adjList.get(n);
-                adjList.set(n, emptySet);
-
-                score_no = Math.max(score_no, bestScore());
-                adjList.set(n, existingSet);
-                //  System.out.println("score_no: " + score_no);
-
-                // for (int k = 1; k <= N; k++) {
-                // System.out.println("adjList.get(k) " + adjList.get(k));
-                // }
-
-                while (!degreeChanges.isEmpty()) {
-                    int[] change = degreeChanges.pop();
-                    degree[change[0]] = change[1];
-                }
-
-                while (!adjChanges.isEmpty()) {
-                    int[] change = adjChanges.pop();
-                    adjList.get(change[0]).add(change[1]);
-                }
-                // calculate highest score after recursive removal of nodes
-                maxScore = Math.max(maxScore, Math.max(score_yes, score_no));
-                // System.out.println("maxScore: " + maxScore);
-            }
-        }
-        /*
-        for (int i = 1; i <= N; i++) {
-            System.out.println("adjList.get(i) " + adjList.get(i));
-        }
-        */
-        return maxScore;
     }
+
+
+
 }
 
 
