@@ -10,11 +10,28 @@ public class CliqueDetector {
     static int[] degree; //
     static List<Set<Integer>> adjList; // to store
 
+    // Node class to implement our PriorityQueue
+    static class Node implements Comparable<Node> {
+        int id;
+        int degree;
+
+        Node(int id, int degree) {
+            this.id = id;
+            this.degree = degree;
+        }
+
+        @Override
+        public int compareTo(Node o) {
+            return this.degree - o.degree;
+        }
+    }
+
 
     // Static class (Nested class)
     static class UnionFind {
         int[] parent; // parent[i] = parent of i
         int[] size; // size[i] = number of elements in subtree located at i
+
 
         //constructor for UnionFind:
         UnionFind(int n) {
@@ -82,6 +99,10 @@ public class CliqueDetector {
             System.out.println("size: " + Arrays.toString(size));
            */
         }
+
+        int getSize(int s) {
+            return size[find(s)]; // will retrieve the size of
+        }
     }
 
     public static void main(String[] args) {
@@ -145,24 +166,15 @@ public class CliqueDetector {
                 adjList.get(x).add(y); //
                 adjList.get(y).add(x); // for symmetry (undirected 1,2 = 2,1)
                 // Print the adjacency list after adding the edge (x, y)
-               /* System.out.println("Adjacency List after adding edge (" + x + ", " + y + "):");
+                System.out.println("Adjacency List after adding edge (" + x + ", " + y + "):");
                 for (int j = 1; j <= N; j++) {
                     System.out.print(j + ": " + adjList.get(j) + " ");
                 }
                 System.out.println();  // Print a newline after each printout
-              */
+
             }
 
             br.close();
-            // System.out.println("just read into adjancency list");
-            // get degree (calculated by finding number of connections of each node)
-            degree = new int[N + 1]; // 1) initialize array
-            for (int i = 1; i <= N; i++) { // find #of connections of each Node
-                degree[i] = adjList.get(i).size(); // store number of connections in array
-                //  System.out.print("degree[i] " + degree[i] + " ");
-            }
-            // example: adjList.get(1).size() -> getting number of connected components of node 1
-            // adjList.get(i) -> neighbors in node i
 
             int maxScore = bestScore();
             System.out.println("maxScore: " + maxScore);
@@ -174,18 +186,100 @@ public class CliqueDetector {
     }
 
     public static int bestScore() {
-        boolean[] removed = new boolean[N];
-        int[] degreeAtRemoval = new int[N];
-        int[] removal = new int[N];
-        int[] degreeC = new int[N]; // array to store current degree of our Nodes
 
-        var pq = new PriorityQueue<>();
+        // example:
+        // 1) create pq: pq = [(1,2), (2,2), (3,2)]
+        // 2) remove node with smallest degree:
+        //    pq.poll() // (1,2)
+        //    // check if
+        //  3) mark and track the order that this node has been removed:
+        //     -> removed(1) = true [false, true, false, ... ]
+        //     -> degreeAtRemoval(1) = 2   removalDegree[0, 2, ... ,]
+        //     -> removalO(0) = 1
+        //  4) check neighbors of the node (in this case (1)
+        //     // adjList(
+        //
+        boolean[] removed = new boolean[N + 1];
+        int[] degreeAtRemoval = new int[N + 1];
+        int[] removalO = new int[N + 1]; // order of removal
+        int[] degreeC = new int[N + 1]; // array to store current degree of our Nodes
+        // 1) Populate your pq
+        PriorityQueue<Node> pq = new PriorityQueue<>();
+        for (int i = 1; i <= N; i++) {
+            degreeC[i] = adjList.get(i).size();
+            //System.out.println("Degree " + i + ": " + degreeC[i]);
+            pq.offer(new Node(i, degreeC[i]));
+            //System.out.println("pq: " + pq.size());
+        }
+
+
+
+        int orderI = 0;
+        // remove each node in pq that has smallest degree
+        while (!pq.isEmpty()) {
+            Node node = pq.poll();
+            int nodeId = node.id; // local variable to store node
+            System.out.println(" removing the node from the pq " + nodeId + " that has degree: " + node.degree);
+            // check if node has not already been removed or that
+            if (!removed[nodeId] || node.degree != degreeC[nodeId]) {
+                //System.out.println("removed[nodeId]: " + removed[nodeId]);
+                continue;
+            }
+            //1) mark node as 'removed'
+            removed[nodeId] = true;
+            //2) store nodes degree once removed
+            System.out.println("marking : " + removed[nodeId]);
+            degreeAtRemoval[nodeId] = node.degree;
+           // System.out.println("degreeAtRemoval[nodeId]++: " +  degreeAtRemoval[nodeId]);
+            //3) track order of removal
+            removalO[orderI++] = nodeId;
+           // System.out.println("removalO[nodeId]++: " +  removalO[nodeId]);
+
+            System.out.println("After removing node " + nodeId + ":");
+            System.out.println("Removal Degree: " + Arrays.toString(degreeC));
+            System.out.println("Removal Order: " + Arrays.toString(removalO));
+            System.out.println("Current Degree: " + Arrays.toString(degreeC));
+            System.out.println("Removed Nodes: " + Arrays.toString(removed));
+
+            // For each neighbor, decrease its degree because this node is removed
+            for (int neighbor : adjList.get(nodeId)) {
+                // check that neighbor has not already been removed
+                if (!removed[neighbor]) {
+                    // sever connection
+                    degreeC[neighbor]--;
+                    // push back into pq
+                    pq.offer(new Node(neighbor, degreeC[neighbor]));
+                }
+            }
+        }
+
+        int maxScore = 0;
+        /*
+        // Add nodes back in reverse removal order and merge connected ones using union-find
+        boolean[] added = new boolean[N];
+        UnionFind uf = new UnionFind(N);
+        // Process nodes in reverse removal order
+        for (int i = N - 1; i >= 0; i--) {
+            int node = removalO[i];
+            added[node] = true;
+            // Union this node with any neighbor that's already been added
+            for (int neighbor : adjList.get(nodeId)) {
+                if (added[neighbor]) {
+                    uf.union(node, neighbor);
+                }
+            }
+            // Calculate clique score
+            int compSize = uf.getSize(node);
+            int candidateScore = compSize * removalDegree[node];
+            maxScore = Math.max(maxScore, candidateScore);
+        }
+
+         */
+
         return 1;
+}
 
     }
 
-
-
-}
 
 
