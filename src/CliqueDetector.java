@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 /// Zain-Abbas Merchant
+/// 3/1/2025
 /// CPSC 4100 Assignment 1
 // store N, M
 public class CliqueDetector {
@@ -92,16 +93,11 @@ public class CliqueDetector {
                 size[rootP] += size[rootQ];
                 //System.out.println("size[rootP] = " + size[rootP]);
             }
-            // Print the state of the parent and size arrays after each union operation
-            /*
-            System.out.println("After union(" + p + ", " + q + "):");
-            System.out.println("parent: " + Arrays.toString(parent));
-            System.out.println("size: " + Arrays.toString(size));
-           */
+
         }
 
         int getSize(int s) {
-            return size[find(s)]; // will retrieve the size of
+            return size[find(s)]; // will retrieve the clique size of given node
         }
     }
 
@@ -111,7 +107,7 @@ public class CliqueDetector {
             System.exit(1);
         }
         try {
-            System.out.println("going to read text file as argument: ");
+            //System.out.println("going to read text file as argument: ");
             //reading input file
             BufferedReader br = new BufferedReader(new FileReader(args[0]));
             // System.out.println("name of file: " + br);
@@ -178,7 +174,7 @@ public class CliqueDetector {
             br.close();
 
             int maxScore = bestScore();
-            System.out.println("maxScore: " + maxScore);
+            System.out.println(maxScore);
         } catch (IOException e) {
             System.err.println("An error occurred while reading the input file:");
             e.printStackTrace();
@@ -187,19 +183,6 @@ public class CliqueDetector {
     }
 
     public static int bestScore() {
-
-        // example:
-        // 1) create pq: pq = [(1,2), (2,2), (3,2)]
-        // 2) remove node with smallest degree:
-        //    pq.poll() // (1,2)
-        //    // check if
-        //  3) mark and track the order that this node has been removed:
-        //     -> removed(1) = true [false, true, false, ... ]
-        //     -> degreeAtRemoval(1) = 2   removalDegree[0, 2, ... ,]
-        //     -> removalO(0) = 1
-        //  4) check neighbors of the node (in this case (1)
-        //     // adjList(
-        //
         boolean[] removed = new boolean[N + 1];
         int[] degreeAtRemoval = new int[N + 1];
         int[] removalO = new int[N + 1]; // order of removal
@@ -215,18 +198,14 @@ public class CliqueDetector {
            // System.out.println("pq: " + pq.size());
         }
 
-        for (int i = 1; i <= N; i++) {
-            System.out.println("degreeC: " + i + " " + degreeC[i]);
-        }
-
         int orderI = 0;
         // remove each node in pq that has smallest degree
         while (!pq.isEmpty()) {
             Node node = pq.poll();
             int nodeId = node.id; // local variable to store node
-            System.out.println(" removing the node from the pq " + nodeId + " that has degree: " + node.degree);
+           // System.out.println(" removing the node from the pq " + nodeId + " that has degree: " + node.degree);
            // System.out.println("removed[nodeId]: " + removed[nodeId]);
-            // check if node has not already been removed or that
+            // check if node has not already been removed
             if (removed[nodeId] || node.degree != degreeC[nodeId])
                 //System.out.println("removed[nodeId]: " + removed[nodeId]);
                 continue;
@@ -242,42 +221,6 @@ public class CliqueDetector {
           //  System.out.println("orderI: " + orderI);
            // System.out.println("removalO[nodeId]++: " +  removalO[nodeId]);
 
-            // Custom print statements
-            System.out.print("Removal Degree: [");
-            for (int i = 1; i <= N; i++) {
-                System.out.print(degreeAtRemoval[i]);
-                if (i < N) System.out.print(", ");
-            }
-            System.out.println("]");
-
-            System.out.print("Removal Order: [");
-            for (int i = 0; i <= N; i++) {
-                System.out.print(removalO[i]);
-                if (i < N) System.out.print(", ");
-            }
-            System.out.println("]");
-
-            System.out.print("Current Degree: [");
-            for (int i = 1; i <= N; i++) {
-                System.out.print(degreeC[i]);
-                if (i < N) System.out.print(", ");
-            }
-            System.out.println("]");
-
-            System.out.print("Removed Nodes: [");
-            for (int i = 1; i <= N; i++) {
-                System.out.print(removed[i]);
-                if (i < N) System.out.print(", ");
-            }
-            System.out.println("]");
-
-            System.out.print("inQueue: [");
-            for (int i = 1; i <= N; i++) {
-                System.out.print(inQueue[i]);
-                if (i < N) System.out.print(", ");
-            }
-            System.out.println("]");
-
             // Decrease degree of each neighbor to signify it has been removed
             for (int neighbor : adjList.get(nodeId)) {
                 // check that neighbor has not already been removed
@@ -287,8 +230,6 @@ public class CliqueDetector {
                     if (!inQueue[neighbor]) {
                         // check that neighbor is not already in pq
                         // push back into pq
-                        // Print the values before adding to the priority queue
-                        System.out.println("Adding to priority queue: Node ID = " + neighbor + ", Degree = " + degreeC[neighbor]);
                         pq.offer(new Node(neighbor, degreeC[neighbor]));
                         // Mark neighbor node as being in the queue
                         inQueue[neighbor] = true;
@@ -319,10 +260,13 @@ public class CliqueDetector {
                     uf.union(node, neighbor);
                 }
             }
-            // Calculating Clique score by
+            // Calculating Clique score
+            //1) retrieve size of clique
             int componentSize = uf.getSize(node);
-            int candidateScore = componentSize * degreeC[node];
-            maxScore = Math.max(maxScore, candidateScore);
+            //2) calculate clique score for each connected component
+            int cliqueScore = componentSize * degreeC[node];
+            // compare clique score to find largest in connected component
+            maxScore = Math.max(maxScore, cliqueScore);
         }
 
         return maxScore;
