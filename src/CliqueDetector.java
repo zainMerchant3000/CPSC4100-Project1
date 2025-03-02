@@ -166,12 +166,13 @@ public class CliqueDetector {
                 adjList.get(x).add(y); //
                 adjList.get(y).add(x); // for symmetry (undirected 1,2 = 2,1)
                 // Print the adjacency list after adding the edge (x, y)
+                /*
                 System.out.println("Adjacency List after adding edge (" + x + ", " + y + "):");
                 for (int j = 1; j <= N; j++) {
                     System.out.print(j + ": " + adjList.get(j) + " ");
                 }
                 System.out.println();  // Print a newline after each printout
-
+*/
             }
 
             br.close();
@@ -203,16 +204,20 @@ public class CliqueDetector {
         int[] degreeAtRemoval = new int[N + 1];
         int[] removalO = new int[N + 1]; // order of removal
         int[] degreeC = new int[N + 1]; // array to store current degree of our Nodes
+        boolean[] inQueue = new boolean[N + 1]; // to track if Node already in Queue (no duplicates)
         // 1) Populate your pq
         PriorityQueue<Node> pq = new PriorityQueue<>();
         for (int i = 1; i <= N; i++) {
             degreeC[i] = adjList.get(i).size();
             //System.out.println("Degree " + i + ": " + degreeC[i]);
             pq.offer(new Node(i, degreeC[i]));
-            //System.out.println("pq: " + pq.size());
+            inQueue[i] = false;
+           // System.out.println("pq: " + pq.size());
         }
 
-
+        for (int i = 1; i <= N; i++) {
+            System.out.println("degreeC: " + i + " " + degreeC[i]);
+        }
 
         int orderI = 0;
         // remove each node in pq that has smallest degree
@@ -220,63 +225,107 @@ public class CliqueDetector {
             Node node = pq.poll();
             int nodeId = node.id; // local variable to store node
             System.out.println(" removing the node from the pq " + nodeId + " that has degree: " + node.degree);
+           // System.out.println("removed[nodeId]: " + removed[nodeId]);
             // check if node has not already been removed or that
-            if (!removed[nodeId] || node.degree != degreeC[nodeId]) {
+            if (removed[nodeId] || node.degree != degreeC[nodeId])
                 //System.out.println("removed[nodeId]: " + removed[nodeId]);
                 continue;
-            }
+
             //1) mark node as 'removed'
             removed[nodeId] = true;
             //2) store nodes degree once removed
-            System.out.println("marking : " + removed[nodeId]);
+           // System.out.println("marking : " + removed[nodeId]);
             degreeAtRemoval[nodeId] = node.degree;
-           // System.out.println("degreeAtRemoval[nodeId]++: " +  degreeAtRemoval[nodeId]);
+            //System.out.println("degreeAtRemoval[nodeId]: " +  degreeAtRemoval[nodeId]);
             //3) track order of removal
             removalO[orderI++] = nodeId;
+          //  System.out.println("orderI: " + orderI);
            // System.out.println("removalO[nodeId]++: " +  removalO[nodeId]);
 
-            System.out.println("After removing node " + nodeId + ":");
-            System.out.println("Removal Degree: " + Arrays.toString(degreeC));
-            System.out.println("Removal Order: " + Arrays.toString(removalO));
-            System.out.println("Current Degree: " + Arrays.toString(degreeC));
-            System.out.println("Removed Nodes: " + Arrays.toString(removed));
+            // Custom print statements
+            System.out.print("Removal Degree: [");
+            for (int i = 1; i <= N; i++) {
+                System.out.print(degreeAtRemoval[i]);
+                if (i < N) System.out.print(", ");
+            }
+            System.out.println("]");
 
-            // For each neighbor, decrease its degree because this node is removed
+            System.out.print("Removal Order: [");
+            for (int i = 0; i <= N; i++) {
+                System.out.print(removalO[i]);
+                if (i < N) System.out.print(", ");
+            }
+            System.out.println("]");
+
+            System.out.print("Current Degree: [");
+            for (int i = 1; i <= N; i++) {
+                System.out.print(degreeC[i]);
+                if (i < N) System.out.print(", ");
+            }
+            System.out.println("]");
+
+            System.out.print("Removed Nodes: [");
+            for (int i = 1; i <= N; i++) {
+                System.out.print(removed[i]);
+                if (i < N) System.out.print(", ");
+            }
+            System.out.println("]");
+
+            System.out.print("inQueue: [");
+            for (int i = 1; i <= N; i++) {
+                System.out.print(inQueue[i]);
+                if (i < N) System.out.print(", ");
+            }
+            System.out.println("]");
+
+            // Decrease degree of each neighbor to signify it has been removed
             for (int neighbor : adjList.get(nodeId)) {
                 // check that neighbor has not already been removed
                 if (!removed[neighbor]) {
                     // sever connection
                     degreeC[neighbor]--;
-                    // push back into pq
-                    pq.offer(new Node(neighbor, degreeC[neighbor]));
+                    if (!inQueue[neighbor]) {
+                        // check that neighbor is not already in pq
+                        // push back into pq
+                        // Print the values before adding to the priority queue
+                        System.out.println("Adding to priority queue: Node ID = " + neighbor + ", Degree = " + degreeC[neighbor]);
+                        pq.offer(new Node(neighbor, degreeC[neighbor]));
+                        // Mark neighbor node as being in the queue
+                        inQueue[neighbor] = true;
+                    }
+                    else {
+                        //Remove and re-add the neighbor with updated degree
+                        pq.remove(new Node(neighbor, degreeC[neighbor]));
+                        pq.offer(new Node(neighbor, degreeC[neighbor]));
+                    }
                 }
             }
         }
 
         int maxScore = 0;
-        /*
-        // Add nodes back in reverse removal order and merge connected ones using union-find
-        boolean[] added = new boolean[N];
-        UnionFind uf = new UnionFind(N);
+
+        // Add nodes back in reverse removal order and merge connected ones to reconstruct graph
+        boolean[] added = new boolean[N+1];
+        UnionFind uf = new UnionFind(N+1);
         // Process nodes in reverse removal order
         for (int i = N - 1; i >= 0; i--) {
+            // retrieve node from removal order (starting from end)
             int node = removalO[i];
+            // mark node
             added[node] = true;
             // Union this node with any neighbor that's already been added
-            for (int neighbor : adjList.get(nodeId)) {
+            for (int neighbor : adjList.get(node)) {
                 if (added[neighbor]) {
                     uf.union(node, neighbor);
                 }
             }
-            // Calculate clique score
-            int compSize = uf.getSize(node);
-            int candidateScore = compSize * removalDegree[node];
+            // Calculating Clique score by
+            int componentSize = uf.getSize(node);
+            int candidateScore = componentSize * degreeC[node];
             maxScore = Math.max(maxScore, candidateScore);
         }
 
-         */
-
-        return 1;
+        return maxScore;
 }
 
     }
